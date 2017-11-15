@@ -116,10 +116,14 @@ module David
       end
     end
 
-    def routes_hash
-      @routes_hash ||= Hash[clean_routes.collect { |r|
+    def calc_routes_hash
+      Hash[clean_routes.collect { |r|
         [CoRE::Link.new(r[0]), { controller: r[1], action: r[2] }]
-      }]
+           }]
+    end
+
+    def routes_hash
+      @routes_hash ||= calc_routes_hash
     end
   end
 end
