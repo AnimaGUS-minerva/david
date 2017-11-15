@@ -66,14 +66,36 @@ module David
     end
 
     def filter(link)
-      href = @env['QUERY_STRING'].split('href=').last
+      queries = @env[QUERY_STRING].split('&')
 
-      return true if href.blank?
+      return true unless queries.length > 0
 
-      # TODO If query end in '*', match on prefix.
-      #      Otherwise match on whole string.
-      #      https://tools.ietf.org/html/rfc6690#section-4.1
-      link.uri =~ Regexp.new(href)
+      selected = false
+      queries.each {|q|
+        # XXX do these need to %-unescaped now?
+        (item, value) = q.split('=')
+
+        matched = case item
+                  when 'href'
+                    # TODO If query end in '*', match on prefix.
+                    #      Otherwise match on whole string.
+                    #      https://tools.ietf.org/html/rfc6690#section-4.1
+                    (link.uri =~ Regexp.new(href))
+
+                  when 'rt'
+                    byebug
+                    # (link.metadata == value)
+                    true
+                  else
+                    false
+                  end
+
+        # only go false->true when matched, do not reset when !matched
+        if matched
+          selected = true
+        end
+      }
+      return selected
     end
 
     def include_route?(route)
