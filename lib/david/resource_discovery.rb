@@ -17,6 +17,10 @@ module David
       return @app.call(env) if env['PATH_INFO']      != '/.well-known/core'
       return [405, {}, []]  if env['REQUEST_METHOD'] != 'GET'
 
+      resource_process(env)
+    end
+
+    def resource_process(env)
       @env = env
 
       queries = @env[QUERY_STRING].split('&')
