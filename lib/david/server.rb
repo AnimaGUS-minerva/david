@@ -14,27 +14,38 @@ module David
     include Respond
     include Utility
 
-    attr_reader :log, :socket
+    attr_reader :log, :socket, :app, :mid_cache, :options
+    attr_reader :host, :port
 
     finalizer :shutdown
 
-    def initialize(app, options)
+    def setup_options(app,options)
       @app        = app.respond_to?(:new) ? app.new : app
       @mid_cache  = {}
       @options    = AppConfig.new(options)
       @log        = @options[:Log]
 
-      host, port  = @options.values_at(:Host, :Port)
+      @host, @port  = @options.values_at(:Host, :Port)
+    end
 
+    def welcome_msg
       log.info "David #{David::VERSION} on #{RUBY_DESCRIPTION}"
-      log.info "Starting on coap://[#{host}]:#{port}"
+      log.info "Starting on coap://[#{@host}]:#{@port}"
+    end
 
-      af = ipv6? ? ::Socket::AF_INET6 : ::Socket::AF_INET
+    def opensocket(dtls = false)
+      @af = ipv6? ? ::Socket::AF_INET6 : ::Socket::AF_INET
 
       # Actually Celluloid::IO::UDPSocket.
-      @socket = UDPSocket.new(af)
+      @socket = UDPSocket.new(@af)
       multicast_initialize! if @options[:Multicast]
-      @socket.bind(host, port)
+      @socket.bind(@host, @port)
+    end
+
+    def initialize(app, options)
+      setup_options(app,options)
+      welcome_msg
+      opensocket(false)
     end
 
     def run
@@ -79,8 +90,10 @@ module David
 
       return if !exchange.non? && exchange.multicast?
 
-      log.info('<- ' + exchange.to_s)
-      log.debug(message.inspect)
+      if log.info?
+        log.info('<- ' + exchange.to_s)
+        log.debug(message.inspect)
+      end
 
       pong(exchange) and return if exchange.ping?
 

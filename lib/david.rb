@@ -40,6 +40,7 @@ require 'david/version'
 
 require 'david/observe'
 require 'david/server'
+require 'david/dtls_server'
 
 if defined?(Rails)
   require 'david/rails/action_controller/base'

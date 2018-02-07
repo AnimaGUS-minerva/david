@@ -4,7 +4,18 @@ module Rack
       def self.run(app, options={})
         g = Celluloid::Supervision::Container.run!
 
-        g.supervise(as: :server, type: ::David::Server, args: [app, options])
+        # XXX too hard to pass options through Rails::Command, and Thor,
+        #     so resort to environment variables.
+        #     DTLS=true turns on DTLS.
+        #     and in david/lib/david/dtls_server.rb:
+        #     SERVCERT=filename provides public key.
+        #     SERVKEY=filename  provides private key.
+
+        unless ENV['DTLS']
+          g.supervise(as: :server, type: ::David::Server, args: [app, options])
+        else
+          g.supervise(as: :server, type: ::David::DtlsServer, args: [app, options])
+        end
         g.supervise(as: :gc, type: ::David::GarbageCollector)
 
         if options[:Observe] != 'false'
@@ -34,6 +45,9 @@ module Rack
           'MulticastGroups=ARRAY' => "Multicast groups (default: #{maddrs.join(', ')})",
           'Observe=BOOLEAN'       => 'Observe support (default: true)',
           'Port=PORT'             => "Port to listen on (default: #{port})"
+          'DTLS=BOOLEAN'          => 'Enable DTLS on this socket',
+          'ssl-cert-file=file'    => 'Public key (certificate) to use for DTLS',
+          'ssl-key-key=file'      => 'Private key (PEM format) to use for DTLS',
         }
       end
     end

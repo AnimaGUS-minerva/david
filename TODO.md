@@ -64,3 +64,7 @@ Observe
 * Garbage collection.
 * Observe on .well-known/core returns "Resource not observable" but Observe
   actor still calls Rails in tick.
+
+DTLS
+----
+There is no way to configure DTLS on the socket.
