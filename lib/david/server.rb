@@ -64,7 +64,7 @@ module David
     end
 
     def answer(exchange, key = nil)
-      @socket.send(exchange.message.to_wire, 0, exchange.host, exchange.port)
+      @socket.sendmsg(exchange.message.to_wire, 0, exchange.host, exchange.port)
 
       if log.info?
         log.info('-> ' + exchange.to_s)

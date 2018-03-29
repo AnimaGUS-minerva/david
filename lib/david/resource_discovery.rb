@@ -40,7 +40,6 @@ module David
             body_links = filtered.keys
 
           when 'rt'
-            byebug
             unless resource_links[value].blank?
               body_links << sprintf("<%s>", ERB::Util.html_escape(resource_links[value]))
             end
@@ -114,6 +113,7 @@ module David
       Rails.application.routes.routes.select { |route|
         route.defaults[:coap]
       }.map do |route|
+        STDERR.puts "routes path: #{route.path.spec.to_s}"
         [
           route.path.spec.to_s,
           route.defaults[:controller],

@@ -11,6 +11,8 @@ module Rack
         #     SERVCERT=filename provides public key.
         #     SERVKEY=filename  provides private key.
 
+        $COAPSERVER = true
+
         unless ENV['DTLS']
           g.supervise(as: :server, type: ::David::Server, args: [app, options])
         else
@@ -44,7 +46,7 @@ module Rack
           'Multicast=BOOLEAN'     => 'Multicast support (default: true)',
           'MulticastGroups=ARRAY' => "Multicast groups (default: #{maddrs.join(', ')})",
           'Observe=BOOLEAN'       => 'Observe support (default: true)',
-          'Port=PORT'             => "Port to listen on (default: #{port})"
+          'Port=PORT'             => "Port to listen on (default: #{port})",
           'DTLS=BOOLEAN'          => 'Enable DTLS on this socket',
           'ssl-cert-file=file'    => 'Public key (certificate) to use for DTLS',
           'ssl-key-key=file'      => 'Private key (PEM format) to use for DTLS',

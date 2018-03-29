@@ -37,23 +37,37 @@ module David
     end
 
     def run
+      # Trap `Kill `
+      Signal.trap("TERM") {
+        print "SIGTERM ... received"
+        Celluloid.shutdown
+        exit
+      }
+      Signal.trap("QUIT") {
+        print "SIGQUIT ... received"
+        Celluloid.shutdown
+        exit
+      }
       loop do
         begin
           newsock   = ::UDPSocket.new(@af)
           #puts "newsock: #{newsock}"
           sslaccept = @ssl.accept(newsock)
 
-          #puts "SSLaccept: #{sslaccept}"
+          puts "SSLaccept: #{sslaccept}"
 
           if sslaccept
             newpeer = DtlsHandler.new(sslaccept, @ctx, self)
             newpeer.async.runone
             #newpeer.runone
+            log.info "Processed, waiting for one"
           else
+            log.info "waiting for traffic 1"
             Celluloid::IO.wait_readable(@ssl)
           end
 
         rescue ::IO::WaitReadable
+          log.info "waiting for traffic 2"
           Celluloid::IO.wait_readable(@ssl)
           retry
         end
@@ -77,21 +91,45 @@ module David
 
     def runone
       @ssl.sync_close = true
+      @ssl.non_blocking = true
       @senderinfo = Addrinfo.new(@ssl.io.peeraddr,
                                  @af, ::Socket::SOCK_DGRAM, ::Socket::IPPROTO_UDP)
-      loop do
+
+      # Trap `Kill `
+      Signal.trap("TERM") {
+        print "SIGTERM ... received"
+        Celluloid.shutdown
+        exit
+      }
+      Signal.trap("QUIT") {
+        print "SIGQUIT ... received"
+        Celluloid.shutdown
+        exit
+      }
+
+      (1..1).each do
+        puts "Processing in #{$$}"
         begin
-          packet = @ssl.sysread(1500)
+          (packet, s_info) = @ssl.recvfrom(1500, 0)
+
         rescue Errno::ECONNREFUSED, EOFError => e
           # indicates socket closed
           @ssl = nil
           return
+
+        rescue ::IO::WaitReadable
+          log.info "waiting for traffic in server"
+          Celluloid::IO.wait_readable(@ssl)
+
         end
 
         # packet = nil means EOF.
         return unless packet
         dispatch(packet, @senderinfo, nil, nil)
       end
+      @ssl.close
+      @ssl = nil
+      return
     end
 
     def answer(exchange, key = nil)
