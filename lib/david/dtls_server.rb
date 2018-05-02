@@ -140,7 +140,11 @@ module David
         log.debug(exchange.message.inspect)
       end
 
-      server.cache_add(exchange.key, exchange.message) if exchange.ack?
+      # do not cache error responses!
+      # maybe should be configurable.
+      unless exchange.message.mcode[0] == 5 || exchange.message.mcode[0] == 4
+        server.cache_add(exchange.key, exchange.message) if exchange.ack?
+      end
     end
 
     private
