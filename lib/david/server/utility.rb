@@ -5,7 +5,6 @@ module David
 
       # This can only use each on body and currently does not support streaming.
       def body_to_string(body)
-        p body
         s = ''
         body.each { |line| s << line.to_s << "\r\n" }
         body.close if body.respond_to?(:close)
