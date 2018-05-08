@@ -113,7 +113,7 @@ module David
       Rails.application.routes.routes.select { |route|
         route.defaults[:coap]
       }.map do |route|
-        STDERR.puts "routes path: #{route.path.spec.to_s}"
+        #STDERR.puts "routes path: #{route.path.spec.to_s}"
         [
           route.path.spec.to_s,
           route.defaults[:controller],
