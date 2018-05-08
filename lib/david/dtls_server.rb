@@ -111,7 +111,7 @@ module David
       # this loop has to continue as long as the DTLS session is alive.
       # but it is unclear how to figure that out right now! XXX
       (1..999).each do |num|
-        puts "#{num} processing in #{$$} on fd: #{@ssl.io.inspect}"
+        puts "\n#{num} processed in #{$$} on fd: #{@ssl.io.inspect}..."
         begin
           (packet, s_info) = @ssl.recvfrom(1500, 0)
 
