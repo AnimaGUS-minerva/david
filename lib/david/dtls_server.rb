@@ -60,7 +60,6 @@ module David
             newpeer = DtlsHandler.new(sslaccept, @ctx, self)
             newpeer.async.runone
             #newpeer.runone
-            log.info "Processed, waiting for one"
           else
             log.info "waiting for traffic 1"
             Celluloid::IO.wait_readable(@ssl)
@@ -71,6 +70,9 @@ module David
           Celluloid::IO.wait_readable(@ssl)
           retry
         end
+
+        log.info "waiting for traffic 3 #{@ssl.io.inspect}"
+        Celluloid::IO.wait_readable(@ssl)
       end
     end
   end
@@ -112,6 +114,7 @@ module David
       # but it is unclear how to figure that out right now! XXX
       (1..999).each do |num|
         puts "\n#{num} processed in #{$$} on fd: #{@ssl.io.inspect}..."
+        Celluloid::IO.wait_readable(@ssl)
         begin
           (packet, s_info) = @ssl.recvfrom(1500, 0)
 
