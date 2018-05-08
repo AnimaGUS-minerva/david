@@ -107,8 +107,11 @@ module David
         exit
       }
 
-      (1..1).each do
-        puts "Processing in #{$$}"
+      #
+      # this loop has to continue as long as the DTLS session is alive.
+      # but it is unclear how to figure that out right now! XXX
+      (1..999).each do |num|
+        puts "#{num} processing in #{$$} on fd: #{@ssl.io.inspect}"
         begin
           (packet, s_info) = @ssl.recvfrom(1500, 0)
 
@@ -120,7 +123,6 @@ module David
         rescue ::IO::WaitReadable
           log.info "waiting for traffic in server"
           Celluloid::IO.wait_readable(@ssl)
-
         end
 
         # packet = nil means EOF.
