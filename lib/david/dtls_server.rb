@@ -27,6 +27,14 @@ module David
         @ssl_ctx.key  = OpenSSL::PKey.read(::IO::read(ENV['SERVKEY']))
       end
 
+      @ssl_ctx.verify_mode = OpenSSL::SSL::VERIFY_PEER
+
+      # accept any certificate from the client.
+      @ssl_ctx.verify_callback = Proc.new do |preverify_ok, store_ctx|
+        store_ctx.error = OpenSSL::X509::V_OK
+        true
+      end
+
       @ssl = OpenSSL::SSL::DTLSSocket.new(@socket, @ssl_ctx)
       self
     end
