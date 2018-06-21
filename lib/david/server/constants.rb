@@ -31,6 +31,7 @@ module David
       COAP_DTLS       = 'coap.dtls'.freeze
       COAP_DTLS_ID    = 'coap.dtls.id'.freeze
       COAP_DTLS_NOSEC = 'NoSec'.freeze
+      COAP_DTLS_SEC   = 'Sec'.freeze
 
       # Freeze some Rack env values.
       EMPTY_STRING          = ''.freeze

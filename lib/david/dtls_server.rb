@@ -145,6 +145,29 @@ module David
       return
     end
 
+    def handle_request(exchange, key, cached)
+      if exchange.con? && !cached.nil? #&& !exchange.idempotent?
+        response = cached[0]
+        log.debug("dedup cache hit #{exchange.mid}")
+      else
+        env       ||= basic_env(exchange)
+        env[COAP_DTLS] = COAP_DTLS_SEC
+        if @ssl.peer_cert
+          #puts "PEER CERTIFICATE: #{@ssl.peer_cert}"
+          env["SSL_CLIENT_CERT"] = @ssl.peer_cert
+        else
+          #puts "NO PEER CERTIFICATE"
+          true
+        end
+        response, _ = respond(exchange, env)
+      end
+
+      unless response.nil?
+        exchange.message = response
+        answer(exchange, key)
+      end
+    end
+
     def answer(exchange, key = nil)
       @ssl.syswrite(exchange.message.to_wire)
 
