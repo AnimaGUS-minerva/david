@@ -63,6 +63,10 @@ module David
       end
     end
 
+    def send_con(message)
+      @socket.sendmsg(exchange.message.to_wire, 0, exchange.host, exchange.port)
+    end
+
     def answer(exchange, key = nil)
       @socket.sendmsg(exchange.message.to_wire, 0, exchange.host, exchange.port)
 
@@ -86,6 +90,16 @@ module David
       end
 
       message  = CoAP::Message.parse(data)
+
+      if message.options[:block1]
+        @block1[message.mid] ||= Array.new
+        @block1[message.mid] << message
+        # figure out if the block1 is done.
+        if false
+          # need to acknowledge the first block.
+        end
+      end
+
       exchange = Exchange.new(host, port, message, anc)
 
       return if !exchange.non? && exchange.multicast?
