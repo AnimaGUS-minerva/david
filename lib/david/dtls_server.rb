@@ -45,6 +45,7 @@ module David
     end
 
     def run
+      if false
       # Trap `Kill `
       Signal.trap("TERM") {
         print "SIGTERM ... received"
@@ -56,13 +57,14 @@ module David
         Celluloid.shutdown
         exit
       }
+      end
       loop do
         begin
           newsock   = ::UDPSocket.new(@af)
-          #puts "newsock: #{newsock}"
+          puts "waiting with newsock: #{newsock.inspect}"
           sslaccept = @ssl.accept(newsock)
 
-          puts "SSLaccept: #{sslaccept}"
+          puts "SSLaccept: #{sslaccept} on #{$$}"
 
           if sslaccept
             newpeer = DtlsHandler.new(sslaccept, @ctx, self)
@@ -105,6 +107,7 @@ module David
       @senderinfo = Addrinfo.new(@ssl.io.peeraddr,
                                  @af, ::Socket::SOCK_DGRAM, ::Socket::IPPROTO_UDP)
 
+      if false
       # Trap `Kill `
       Signal.trap("TERM") {
         print "SIGTERM ... received"
@@ -116,6 +119,7 @@ module David
         Celluloid.shutdown
         exit
       }
+      end
 
       #
       # this loop has to continue as long as the DTLS session is alive.
