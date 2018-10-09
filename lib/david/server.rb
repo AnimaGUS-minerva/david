@@ -16,6 +16,7 @@ module David
 
     attr_reader :log, :socket, :app, :mid_cache, :options
     attr_reader :host, :port
+    cattr_accessor :blocks do Hash.new end
 
     finalizer :shutdown
 
@@ -68,7 +69,7 @@ module David
     end
 
     def answer(exchange, key = nil)
-      @socket.sendmsg(exchange.message.to_wire, 0, exchange.host, exchange.port)
+      send_reply(exchange.message.to_wire, 0, exchange.host, exchange.port)
 
       if log.info?
         log.info('-> ' + exchange.to_s)
@@ -76,6 +77,10 @@ module David
       end
 
       cache_add(exchange.key, exchange.message) if exchange.ack?
+    end
+
+    def send_reply(wire, thing, host, port)
+      @socket.sendmsg(message, thing, host, port)
     end
 
     private
@@ -91,12 +96,35 @@ module David
 
       message  = CoAP::Message.parse(data)
 
-      if message.options[:block1]
-        @block1[message.mid] ||= Array.new
-        @block1[message.mid] << message
-        # figure out if the block1 is done.
-        if false
-          # need to acknowledge the first block.
+      b1 = message.options[:block1]
+      unless b1.nil?
+        # find the CoAP Block for this MID.
+
+        block1 = CoRE::CoAP::Block.new(message.options[:block1]).decode
+        block1.data = message.payload
+        @@blocks[message.mid] ||= Array.new
+        @@blocks[message.mid] << block1
+
+        log.info("<-block1[#{block1.num},#{message.mid}]- #{@@blocks[message.mid].size} received." )
+        if block1.more
+          m2 = message.clone
+          m2.mcode = [2, 31]
+          m2.tt    = :non
+          if m2.tt == :con
+            m2.tt    = :ack
+          end
+
+          byebug
+          log.info(" replying to block #{block1.num}")
+          send_reply(m2.to_wire, 0, host, port)
+          return
+        else
+          log.info(" (last)")
+
+          data = ""
+          # now need to assemble the blocks we got.
+          @@blocks[message.mid].each { |b| b.assemble(data) }
+          message.payload = data
         end
       end
 

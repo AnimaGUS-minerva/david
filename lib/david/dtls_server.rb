@@ -19,6 +19,7 @@ module David
       setup_options(app, options)
       welcome_msg
       opensocket(true)
+
       @ssl_ctx = OpenSSL::SSL::DTLSContext.new
       if ENV['SERVCERT']
         @ssl_ctx.cert = OpenSSL::X509::Certificate.new(::IO::read(ENV['SERVCERT']))
@@ -170,6 +171,10 @@ module David
         exchange.message = response
         answer(exchange, key)
       end
+    end
+
+    def send_reply(wire, thing, host, port)
+      @ssl.syswrite(wire)
     end
 
     def answer(exchange, key = nil)
