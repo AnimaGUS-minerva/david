@@ -16,6 +16,11 @@ module David
 
     attr_reader :log, :socket, :app, :mid_cache, :options
     attr_reader :host, :port
+
+    # this should be a more complex structure that keeps track of how much
+    # space has been used per-mid, and when each entry was last updated.
+    # old entries should be expired on a LRU basis.
+    # XXX substitute a duck-type for Hash
     cattr_accessor :blocks do Hash.new end
 
     finalizer :shutdown
@@ -114,7 +119,7 @@ module David
             m2.tt    = :ack
           end
 
-          byebug
+          #byebug
           log.info(" replying to block #{block1.num}")
           send_reply(m2.to_wire, 0, host, port)
           return
@@ -123,8 +128,18 @@ module David
 
           data = ""
           # now need to assemble the blocks we got.
-          @@blocks[message.mid].each { |b| b.assemble(data) }
+          blocks = @@blocks[message.mid]
+          blocks.each { |b| b.assemble(data) }
           message.payload = data
+
+          # calculate SHA256 of data for logging/debug purposes
+          sha256 = Digest::SHA2.hexdigest(data)
+          log.info("#{blocks.size} chunks assembled, size=#{data.size}, SHA256: " + sha256)
+
+          # clean up cache.
+          @@blocks.delete(message.mid)
+
+          # XXX a timer needs to clean up the blocks at some interval.
         end
       end
 
