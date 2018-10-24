@@ -64,6 +64,7 @@ module David
           newsock   = ::UDPSocket.new(@af)
           puts "waiting with newsock: #{newsock.inspect}"
           sslaccept = @ssl.accept(newsock)
+          #sslaccept = @ssl.accept
 
           puts "SSLaccept: #{sslaccept} on #{$$}"
 
