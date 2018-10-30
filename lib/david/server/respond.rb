@@ -43,6 +43,9 @@ module David
 
         code, headers, body = @app.call(env)
 
+        #byebug if @count
+        #@count = 1
+
         # No error responses on multicast exchanges.
         return if exchange.multicast? && !(200..299).include?(code)
 
