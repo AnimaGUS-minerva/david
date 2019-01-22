@@ -21,6 +21,10 @@ module David
       opensocket(true)
 
       @ssl_ctx = OpenSSL::SSL::DTLSContext.new
+
+      cipherlist = options[:cipher_list] || ENV['CIPHER_LIST']
+      @ssl_ctx.ciphers = cipherlist if cipherlist
+
       if ENV['SERVCERT']
         @ssl_ctx.cert = OpenSSL::X509::Certificate.new(::IO::read(ENV['SERVCERT']))
       end
@@ -81,6 +85,12 @@ module David
           log.info "waiting for traffic 2"
           Celluloid::IO.wait_readable(@ssl)
           retry
+
+        rescue OpenSSL::SSL::SSLError
+          #log.info "connection from #{newsock.peeraddr} failed with #{$!.message}"
+          log.info "connection failed with #{$!.message}"
+        rescue
+          log.info "other error from #{newsock.peeraddr}: #{$!}"
         end
 
         log.info "waiting for traffic 3 #{@ssl.io.inspect}"
