@@ -18,6 +18,7 @@ Gem::Specification.new do |s|
   begin
     s.files = `git ls-files`.split($/)
   rescue
+    # probably no git command
     s.files = Dir.glob('**/*').select { |x| x !~ /.*\.gem$/ }
   end
 
